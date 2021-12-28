@@ -1,5 +1,22 @@
 [
   {
+    "path": "posts/2021-12-28-segunda-analise/",
+    "title": "Segunda Analise",
+    "description": "|Segundo Posto sobre Trilha DSA de Cid Clay Quirino.",
+    "author": [
+      {
+        "name": "Cid Clay Quirino",
+        "url": "https://example.com/norajones"
+      }
+    ],
+    "date": "2021-12-28",
+    "categories": [],
+    "contents": "\r\nTrilhas de Conhecimento sobre DSA.\r\n\r\n\r\n\r\n",
+    "preview": {},
+    "last_modified": "2021-12-28T07:30:35-03:00",
+    "input_file": "segunda-analise.knit.md"
+  },
+  {
     "path": "posts/welcome/",
     "title": "Welcome to Portfolio do Cid Clay",
     "description": "Welcome to our new blog, Portfolio do Cid Clay. We hope you enjoy \nreading what we have to say!",

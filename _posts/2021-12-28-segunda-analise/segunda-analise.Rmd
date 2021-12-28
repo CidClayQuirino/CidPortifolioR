@@ -1,9 +1,9 @@
 ---
 title: "Segunda Analise"
 description: |
-  A short description of the post.
+  |Segundo Posto sobre Trilha DSA de Cid Clay Quirino.
 author:
-  - name: Nora Jones
+  - name: Cid Clay Quirino
     url: https://example.com/norajones
 date: 2021-12-28
 output:
@@ -16,8 +16,273 @@ output:
 knitr::opts_chunk$set(echo = FALSE)
 ```
 
-Distill is a publication format for scientific and technical writing, native to the web.
+Trilhas de Conhecimento sobre DSA.
 
-Learn more about using Distill at <https://rstudio.github.io/distill>.
+---
+title: "Analisando dados da RAIS"
+description: |
+  Essa análise teve como objetivo analisar os salários na base da RAIS. Esse projeto foi feito na Semana Data Science na Prática da Curso-R.
+author:
+  - name: Nora Jones
+    url: https://example.com/norajones
+date: 2021-12-07
+output:
+  distill::distill_article:
+    self_contained: false
+---
 
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+Nesse relatório estamos interessados em responder a pergunta:
+
+"Quanto ganha um cientista de dados?"
+
+Para isso vamos utilizar a base da RAIS anonimizada
+
+# Acessando os dados da RAIS
+
+Vamos utilizar [o datalake da iniciativa base dos dados](https://basedosdados.org).
+
+```{r message=FALSE, warning=FALSE}
+#library(bigrquery)
+library(dplyr)
+```
+
+Abaixo está o código que carrega as primeiras 5 linhas da tabela de microdados.
+
+```{r, eval = FALSE, echo = TRUE}
+# como eu faria se fosse ler de um arquivo
+# tabela_normal <- read.csv("https://raw.githubusercontent.com/curso-r/main-r4ds-1/master/dados/imdb.csv")
+# 
+# head(tabela_normal, 5)
+# como eu faço se uso um SGDB (robô que processa e me envia dados)
+bigrquery::bq_auth("cidclay@gmail.com")
+# atalho: ctrl + enter
+conexao <- dbConnect(
+  bigquery(),
+  project = "basedosdados",
+  dataset = "br_me_rais",
+  billing = "CidClay"
+)
+primeiras_cinco_linhas <- collect(head(select(tbl(conexao, "microdados_vinculos"),
+       everything()), 5))
+primeiras_cinco_linhas
+```
+
+Vamos fazer a mesma coisa utilizando o pipe!
+
+```{r, eval = FALSE, echo = TRUE}
+primeiras_cinco_linhas_com_pipe <- tbl(conexao, "microdados_vinculos") %>% 
+  select(everything()) %>% 
+  head(5) %>% 
+  collect()
+# atalho: ctrl+shift+M
+# antes e atualmente: {magrittr}: %>%
+# atualmente (4.1 ou +): |>
+primeiras_cinco_linhas_com_pipe
+```
+
+
+A base de dados que queremos analisar aqui é a base de pessoas que (potencialmente) trabalham com ciência de dados. Existe um Código Brasileiro de Ocupações (CBO), que tem um cadastro de todas as ocupações formais no Brasil. Vamos pegar alguns códigos que são relacionados a ciência de dados e filtrar a base da RAIS para obter os dados dessas pessoas.
+
+Pergunta principal de pesquisa: 
+
+> Quem trabalha com ciência de dados ganha quanto?
+```{r, eval = FALSE, echo = TRUE}
+codigos_cbo <- c(
+  "252515", "252525", "211110",
+  # pesquisa/cientista
+  "211205", "211210","411035",
+  "211210", "131120","211215"
+  # ocupações estatísticas
+)
+microdados_tbl <- tbl(conexao, "microdados_vinculos") %>% 
+  select(everything()) %>% 
+  filter(
+    ano >= 2013,
+    cbo_2002 %in% codigos_cbo
+  ) %>% 
+  head(5000)
+tabela_microdados_vinculos <- collect(microdados_tbl)
+View(tabela_microdados_vinculos)
+```
+
+Agora vamos rodar com a base completa!
+
+```{r, eval = FALSE, echo = TRUE}
+microdados_tbl <- tbl(conexao, "microdados_vinculos") %>% 
+  select(everything()) %>% 
+  filter(
+    ano >= 2013,
+    cbo_2002 %in% codigos_cbo
+  )
+tabela_microdados_vinculos <- collect(microdados_tbl)
+saveRDS(tabela_microdados_vinculos, "tabela_microdados_vinculos.rds")
+```
+
+## Perguntas de pesquisa
+
+- Quanto ganha uma pessoa que trabalha com ciência de dados
+
+Perguntas mais específicas
+
+- Quanto o valor médio varia no tempo?
+- Quanto o valor médio varia regionalmente?
+- Quanto o valor médio varia por características das pessoas?
+    - Gênero
+    - Raça/cor
+    - Idade
+
+- [Desafio] Qual cargo tem a maior taxa de crescimento dentro daquele setor da economia (CNAE) proporcionalmente a municípios com mais pessoas empregadas naquela CBO
+
+### Como variam os salários médios no tempo?
+
+```{r}
+tabela_microdados_vinculos <- readRDS("tabela_microdados_vinculos.rds")
+library(ggplot2)
+### Comentários:
+## ctrl+shift+c
+tabela_medias <- tabela_microdados_vinculos %>% 
+  group_by(ano) %>% 
+  summarise(media_salario = mean(valor_remuneracao_media))
+## Funções do {dplyr} que vamos usar:
+# filter: filtra linhas
+# select: seleciona colunas
+# mutate: cria colunas
+# group_by + summarise: summariza a base
+# arrange: ordena a base
+ggplot(tabela_medias) +
+  aes(x = ano, y = media_salario) +
+  geom_col() +
+  scale_x_continuous(breaks = 2013:2019)
+```
+
+Agora vamos ver os números exatos:
+
+```{r}
+library(knitr)
+tabela_medias %>% 
+  kable()
+```
+
+### Quanto o salário médio varia regionalmente?
+
+```{r}
+tabela_media_uf <- tabela_microdados_vinculos %>% 
+  group_by(sigla_uf) %>% 
+  summarise(
+    media = mean(valor_remuneracao_media)
+  )
+```
+
+Essa visualização a princípio é melhor em tabela:
+
+```{r}
+knitr::kable(tabela_media_uf)
+```
+
+Agora olhando em gráfico:
+
+```{r}
+tabela_media_uf %>% 
+  ggplot(aes(x = sigla_uf, y = media)) +
+  geom_col()
+```
+
+Esse gráfico é legal até pra colocar na análise explicativa! DF e RJ aparentemente estão muito acima dos demais estados, conforme destaca o gráfico abaixo:
+
+```{r}
+library(forcats)
+tabela_media_uf %>% 
+  mutate(
+    sigla_uf_fator = fct_reorder(sigla_uf, media)
+  ) %>% 
+  ggplot(aes(y = sigla_uf_fator, x = media)) + 
+  geom_col() +
+  labs(y = "Unidade da Federação", x = "Média Salarial (R$)")
+  
+```
+
+Será que essa mesma conclusão permanece quando escolhemos a mediana como medida resumo dos salários?
+
+```{r}
+tabela_mediana_uf <- tabela_microdados_vinculos %>% 
+  group_by(sigla_uf) %>% 
+  summarise(
+    mediana = median(valor_remuneracao_media)
+  )
+tabela_mediana_uf %>% 
+  arrange(desc(mediana)) %>% 
+  knitr::kable()
+```
+
+```{r}
+tabela_mediana_uf %>% 
+  mutate(
+    sigla_uf = fct_reorder(sigla_uf, mediana)
+  ) %>% 
+  ggplot(aes(x = mediana, y = sigla_uf)) +
+  geom_col()
+tabela_media_uf %>% 
+  mutate(
+    sigla_uf_fator = fct_reorder(sigla_uf, media)
+  ) %>% 
+  ggplot(aes(y = sigla_uf_fator, x = media)) + 
+  geom_col() +
+  labs(y = "Unidade da Federação", x = "Média Salarial (R$)")
+```
+
+### Os salários variam por sexo?
+
+```{r}
+tabela_resumo_sexo <- tabela_microdados_vinculos %>% 
+  group_by(sexo) %>% 
+  summarise(
+    media = mean(valor_remuneracao_media),
+    mediana = median(valor_remuneracao_media)
+  )
+```
+
+```{r}
+tabela_resumo_sexo %>% 
+  knitr::kable()
+```
+
+### Os salários variam por Raça/Cor?
+
+```{r}
+tabela_resumo_raca_cor <- tabela_microdados_vinculos %>% 
+  group_by(raca_cor) %>% 
+  summarise(
+    media = mean(valor_remuneracao_media),
+    mediana = median(valor_remuneracao_media)
+  )
+```
+
+```{r}
+tabela_resumo_raca_cor %>% 
+  knitr::kable()
+```
+
+```{r}
+tabela_resumo_sexo_raca_cor <- tabela_microdados_vinculos %>% 
+  group_by(cbo_2002, raca_cor, sexo) %>% 
+  summarise(
+    media = mean(valor_remuneracao_media),
+    mediana = median(valor_remuneracao_media)
+  )
+```
+
+```{r}
+tabela_resumo_sexo_raca_cor %>% 
+  knitr::kable()
+```
+
+```{r}
+ggplot(tabela_resumo_sexo_raca_cor,
+       aes(x = raca_cor, y = media, fill = sexo)) +
+  geom_col(position = 'dodge')
+```
