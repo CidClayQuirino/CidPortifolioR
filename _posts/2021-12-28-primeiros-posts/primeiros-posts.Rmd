@@ -1,0 +1,21 @@
+---
+title: "Primeiros Posts"
+description: |
+  Analise dos ultimos postos em R de Cid Clay Quirino e a trilha de DSA.
+author:
+  - name: |Cid Clay QUirino
+    url: https://example.com/norajones
+date: 2021-12-28
+output:
+  distill::distill_article:
+    self_contained: false
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+Esse e o meu primeiro post no portiolio Cid Clay sobre Triha de Data Science Analytics.
+
+
