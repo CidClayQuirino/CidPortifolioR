@@ -40,7 +40,7 @@ Abaixo está o código que carrega as primeiras 5 linhas da tabela de microdados
 # 
 # head(tabela_normal, 5)
 # como eu faço se uso um SGDB (robô que processa e me envia dados)
-bigrquery::bq_auth("jtrecenti@curso-r.com")
+bigrquery::bq_auth("cidclay@gmail.com")
 # atalho: ctrl + enter
 conexao <- dbConnect(
   bigquery(),
