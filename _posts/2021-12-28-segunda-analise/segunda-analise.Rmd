@@ -1,7 +1,7 @@
 ---
-title: "Segunda Analise"
+title: "Terceira Analise"
 description: |
-  |Segundo Posto sobre Trilha DSA de Cid Clay Quirino.
+  |Salarios de DSA.
 author:
   - name: Cid Clay Quirino
     url: https://example.com/norajones
@@ -16,25 +16,6 @@ output:
 knitr::opts_chunk$set(echo = FALSE)
 ```
 
-Trilhas de Conhecimento sobre DSA.
-
----
-title: "Analisando dados da RAIS"
-description: |
-  Essa análise teve como objetivo analisar os salários na base da RAIS. Esse projeto foi feito na Semana Data Science na Prática da Curso-R.
-author:
-  - name: Nora Jones
-    url: https://example.com/norajones
-date: 2021-12-07
-output:
-  distill::distill_article:
-    self_contained: false
----
-
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE)
-```
 
 Nesse relatório estamos interessados em responder a pergunta:
 
@@ -59,7 +40,7 @@ Abaixo está o código que carrega as primeiras 5 linhas da tabela de microdados
 # 
 # head(tabela_normal, 5)
 # como eu faço se uso um SGDB (robô que processa e me envia dados)
-bigrquery::bq_auth("cidclay@gmail.com")
+bigrquery::bq_auth("jtrecenti@curso-r.com")
 # atalho: ctrl + enter
 conexao <- dbConnect(
   bigquery(),
